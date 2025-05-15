@@ -12,8 +12,8 @@
             <TabItem Header="Foto's">
                 <Grid>
                     <ScrollViewer Margin="10,38,10,43">
-                        <WrapPanel x:Name="spPictures" Grid.Row="3" Grid.Column="3" Margin="12">
-                        </WrapPanel>
+                        <UniformGrid x:Name="spPictures" Margin="12" Columns="3" Rows="3">
+                        </UniformGrid>
                     </ScrollViewer>
                     <Button x:Name="btnRefresh" Content="Refresh" HorizontalAlignment="Left" Margin="10,998,0,0" VerticalAlignment="Top" Width="83" Height="28" Click="btnRefresh_Click"/>
                 </Grid>
