@@ -15,21 +15,29 @@ namespace PRA_B4_FOTOKIOSK.magie
     {
 
         public static Home Instance { get; set; }
-       
 
         public static void UpdatePictures(List<KioskPhoto> PicturesToDisplay)
         {
+            int GridRow = 0;
+            int GridCulumn;
+            
             Instance.spPictures.Children.Clear();
-                foreach (KioskPhoto picture in PicturesToDisplay)
+            foreach (KioskPhoto picture in PicturesToDisplay)
+            {
+                if(GridRow <= 4)
                 {
                     Image image = new Image();
                     var bitmap = pathToImage(picture.Source);
                     image.Source = bitmap;
                     image.Width = 1920 / 3.5;
                     image.Height = 1080 / 3.5;
-                Instance.spPictures.Children.Add(image);
+                    //set images to grid 3x3
+                    Grid.SetRow(image, GridRow);
+                    GridRow++;
+                    Instance.spPictures.Children.Add(image);
                     Console.WriteLine(picture);
                 }
+            }
         }
 
         public static BitmapImage pathToImage(string path)
