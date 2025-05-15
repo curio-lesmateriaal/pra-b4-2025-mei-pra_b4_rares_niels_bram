@@ -94,6 +94,7 @@ namespace PRA_B4_FOTOKIOSK.controller
         {
             if (ShopManager.OrderedProducts.Count == 0)
             {
+                MessageBox.Show("Er staan geen producten op de bon om op te slaan.", "Lege bon", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             string bonMap = Path.Combine("..", "..", "..", "BonOpslag");
