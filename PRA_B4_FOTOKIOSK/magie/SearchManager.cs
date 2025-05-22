@@ -18,7 +18,14 @@ namespace PRA_B4_FOTOKIOSK.magie
 
         public static void SetPicture(string path)
         {
-            Instance.imgBig.Source = pathToImage(path);
+            if (path == null)
+            {
+                Instance.imgBig.Source = null;
+            }
+            else
+            {
+                Instance.imgBig.Source = pathToImage(path);
+            }
         }
 
         public static BitmapImage pathToImage(string path)
