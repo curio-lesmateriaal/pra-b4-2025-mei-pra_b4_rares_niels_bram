@@ -2,32 +2,21 @@
 using PRA_B4_FOTOKIOSK.models;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using System.Windows;
 
 namespace PRA_B4_FOTOKIOSK.controller
 {
     public class ShopController
     {
-
         public static Home Window { get; set; }
 
         public void Start()
         {
-
-
-            //// Stel de prijslijst in aan de rechter kant.
-            //ShopManager.SetShopPriceList("Prijzen:\nFoto 10x15: €2.55");
-
-            //// Stel de bon in onderaan het scherm
-            //ShopManager.SetShopReceipt("Eindbedrag\n€");
-
-            // Vul de productlijst met producten
+            // Voeg producten toe aan de lijst
             ShopManager.Products.Add(new KioskProduct() { Name = "Foto 10x15", Prijs = 2.99 });
             ShopManager.Products.Add(new KioskProduct() { Name = "Mug met foto 10x15", Prijs = 5.99 });
             ShopManager.Products.Add(new KioskProduct() { Name = "T-shirt met foto 10x15", Prijs = 7.99 });
@@ -41,33 +30,68 @@ namespace PRA_B4_FOTOKIOSK.controller
             ShopManager.UpdateDropDownProducts();
         }
 
-        // Wordt uitgevoerd wanneer er op de Toevoegen knop is geklikt
         public void AddButtonClick()
         {
             KioskProduct product = ShopManager.GetSelectedProduct();
             int? fotoID = ShopManager.GetFotoId();
             int? amount = ShopManager.GetAmount();
-            if (fotoID == null) { fotoID = 0; }
+
+            if (fotoID == null || fotoID <= 0)
+            {
+                MessageBox.Show("Voer een geldig foto-ID in.", "Ongeldige invoer", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // ✅ Zoek exact overeenkomend fotopad op basis van ID
+            string matchedFotoPath = null;
+            string matchedFotoId = null;
+
+            foreach (string dir in Directory.GetDirectories(@"../../../fotos"))
+            {
+                foreach (string file in Directory.GetFiles(dir))
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(file); // e.g. 10_05_30_id1234
+                    if (fileName.Contains($"id{fotoID}.") || fileName.EndsWith($"id{fotoID}")) // stricter match
+                    {
+                        matchedFotoPath = file;
+                        int idStart = fileName.IndexOf("id") + 2;
+                        string realId = fileName.Substring(idStart); // extract "1234"
+                        matchedFotoId = realId;
+                        break;
+                    }
+                }
+                if (matchedFotoPath != null) break;
+            }
+
+            if (matchedFotoPath == null)
+            {
+                MessageBox.Show($"Geen foto gevonden met exact ID: {fotoID}", "ID niet gevonden", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (amount == null) { amount = 1; }
-            if (product != null) {
+
+            if (product != null)
+            {
                 double totaalPrijs = product.Prijs * amount.Value;
 
                 OrderedProduct order = new OrderedProduct()
                 {
-                    FotoNummer = fotoID.Value,
+                    FotoNummer = int.Parse(matchedFotoId),
                     ProductNaam = product.Name,
                     Aantal = amount.Value,
                     TotaalPrijs = totaalPrijs
                 };
 
                 ShopManager.OrderedProducts.Add(order);
-                
+
                 StringBuilder sb = new StringBuilder();
                 double totaal = 0;
 
                 sb.AppendLine("Eindbedrag");
 
-                foreach (OrderedProduct item in ShopManager.OrderedProducts) {
+                foreach (OrderedProduct item in ShopManager.OrderedProducts)
+                {
                     totaal += item.TotaalPrijs;
                 }
 
@@ -78,20 +102,17 @@ namespace PRA_B4_FOTOKIOSK.controller
                     sb.AppendLine($"{item.ProductNaam} ({item.FotoNummer}) : €{item.TotaalPrijs:0.00} ({item.Aantal}x)");
                 }
 
-                ShopManager.SetShopReceipt( sb.ToString() );
-                //ShopManager.AddShopReceipt($"{product.Name} ({fotoID}) : €{product.Prijs} x{amount}\n");
+                ShopManager.SetShopReceipt(sb.ToString());
             }
-
         }
 
-        // Wordt uitgevoerd wanneer er op de Resetten knop is geklikt
+
         public void ResetButtonClick()
         {
             ShopManager.OrderedProducts.Clear();
             ShopManager.SetShopReceipt("");
         }
 
-        // Wordt uitgevoerd wanneer er op de Save knop is geklikt
         public void SaveButtonClick()
         {
             if (ShopManager.OrderedProducts.Count == 0)
@@ -99,13 +120,12 @@ namespace PRA_B4_FOTOKIOSK.controller
                 MessageBox.Show("Er staan geen producten op de bon om op te slaan.", "Lege bon", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            string bonMap = Path.Combine("..", "..", "..", "BonOpslag");
 
+            string bonMap = Path.Combine("..", "..", "..", "BonOpslag");
 
             if (!Directory.Exists(bonMap))
             {
-                Directory.CreateDirectory(bonMap);  
-                return;
+                Directory.CreateDirectory(bonMap);
             }
 
             string fileName = $"Kassabon_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
@@ -117,9 +137,9 @@ namespace PRA_B4_FOTOKIOSK.controller
             sb.AppendLine("KASSABON");
             sb.AppendLine("---------");
 
-            foreach(OrderedProduct item in ShopManager.OrderedProducts)
+            foreach (OrderedProduct item in ShopManager.OrderedProducts)
             {
-                totaal = item.TotaalPrijs;
+                totaal += item.TotaalPrijs;
                 sb.AppendLine($"{item.ProductNaam} ({item.FotoNummer}) : €{item.TotaalPrijs:0.00} ({item.Aantal}x)");
             }
 
@@ -130,6 +150,5 @@ namespace PRA_B4_FOTOKIOSK.controller
 
             MessageBox.Show($"Bon opgeslagen in:\n{Path.GetFullPath(filePath)}", "Bon opgeslagen", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-
     }
 }
